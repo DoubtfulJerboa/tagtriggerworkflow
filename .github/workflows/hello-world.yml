@@ -33,7 +33,7 @@ jobs:
           # Extract and iterate through release object keys and values
           jq -r '.release | to_entries[] | "\(.key): \(.value)"' < $GITHUB_EVENT_PATH
 
-          
+
       - name: Checkout Repository
         uses: actions/checkout@v3
 
@@ -59,6 +59,11 @@ jobs:
           # Export variables for use in subsequent steps
           echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
           echo "RELEASE_ID=$RELEASE_ID" >> $GITHUB_ENV
+
+      - name: just get it out of the event
+        run: |
+          echo ${{github.event.release.tag_name}}
+          echo ${{github.event.release.id}}
 
       - name: Use Release Details
         run: |
