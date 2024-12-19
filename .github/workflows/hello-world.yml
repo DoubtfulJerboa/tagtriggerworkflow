@@ -10,6 +10,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Dump GitHub Event Payload
+        env:
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+        run: |
+          echo "Dumping full GitHub event payload:"
+          cat $GITHUB_EVENT_PATH
+
+      - name: Extract Release Object
+        env:
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+        run: |
+          echo "Unwinding github.event.release:"
+          # Extract and pretty-print the release object
+          jq '.release' < $GITHUB_EVENT_PATH
+
+      - name: Iterate Over Release Keys
+        env:
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+        run: |
+          echo "Iterating through github.event.release keys:"
+          # Extract and iterate through release object keys and values
+          jq -r '.release | to_entries[] | "\(.key): \(.value)"' < $GITHUB_EVENT_PATH
+
+          
       - name: Checkout Repository
         uses: actions/checkout@v3
 
