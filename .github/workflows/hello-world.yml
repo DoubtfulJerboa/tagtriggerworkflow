@@ -1,0 +1,42 @@
+name: helloworld
+
+on: 
+    release:
+      types: [published]
+
+
+jobs:
+  fetch-release-details:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Get Release Tag and ID
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Fetch release tag from GitHub context
+          RELEASE_TAG=${{ github.event.release.tag_name }}
+          echo "Release Tag: $RELEASE_TAG"
+
+          echo "${{github.event.release}}"
+
+          # Fetch release ID using GitHub API
+          RELEASE_ID=$(curl -s \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "${{ github.api_url }}/repos/${{ github.repository }}/releases" \
+            | jq -r ".[] | select(.tag_name == \"$RELEASE_TAG\") | .id")
+
+          echo "Release ID: $RELEASE_ID"
+
+          # Export variables for use in subsequent steps
+          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+          echo "RELEASE_ID=$RELEASE_ID" >> $GITHUB_ENV
+
+      - name: Use Release Details
+        run: |
+          echo "Using Release Tag: $RELEASE_TAG"
+          echo "Using Release ID: $RELEASE_ID"
