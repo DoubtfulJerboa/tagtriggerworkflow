@@ -61,6 +61,19 @@ jobs:
     outputs: 
       enviros: ${{ steps.get-name.outputs.branch_name }}
     steps:
+      - run: echo ${{ github.ref}}
+      - run: git branch --show-current
       - id: get-name
         run: echo "tag=$( git branch --show-current )" >> "$GITHUB_OUTPUT" 
+
+  fetch-branch-name2:
+    runs-on: ubuntu-latest
+    outputs: 
+      enviros: ${{ steps.get-name.outputs.branch_name }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - run: echo ${{ github.ref}}
       - run: git branch --show-current
+      - id: get-name
+        run: echo "tag=$( git branch --show-current )" >> "$GITHUB_OUTPUT" 
