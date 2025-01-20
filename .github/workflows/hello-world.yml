@@ -63,6 +63,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-      - run: echo $(git branch --show-current)
+      - run: echo ${{ github.event.release.target_commitish }}
       - id: get-name
-        run: echo "tag=$( git branch --show-current )" >> "$GITHUB_OUTPUT" 
+        run: echo "tag=${{ github.event.release.target_commitish }}" >> "$GITHUB_OUTPUT" 
