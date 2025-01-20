@@ -6,66 +6,61 @@ on:
 
 
 jobs:
+  fetch-environments:
+    runs-on: ubuntu-latest
+    outputs: 
+      enviros: ${{ steps.get-envs.outputs.envs }}
+    steps:
+      - id: get-envs
+        run: |            
+          environments=()
+          pageNum=1
+          total=1
+          
+          while [ ${#environments[@]} -lt $total ]; do
+              res=$(curl -s -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" -H "Authorization: Bearer ${{github.token}}" "https://api.github.com/repos/${{github.repository}}/environments?per_page=100&page=$pageNum")
+              
+              envs=($(echo "$res" | jq -r '.environments[].name'))
+              total=$(echo "$res" | jq -r '.total_count')
+              
+              if [ ${#envs[@]} -eq 0 ]; then
+                  echo "An error has occurred while attempting to fetch the environments"
+                  exit 1
+              fi
+              
+              environments+=("${envs[@]}")
+              ((pageNum++))
+          done
+          
+          envlist=$(printf '%s\n' "${environments[@]}" | jq -R . | jq -sc .) >> "$GITHUB_OUTPUT"
+
+          echo envs=$envlist
+          # eg ["productions","develop"]
+
+          echo envs=$envlist >> $GITHUB_OUTPUT
+
   fetch-release-details:
     runs-on: ubuntu-latest
-
+    outputs:
+      TAG_NAME: ${{steps.get-tag.outputs.tag}}
     steps:
-      - name: Dump GitHub Event Payload
-        env:
-          GITHUB_EVENT_PATH: ${{ github.event_path }}
-        run: |
-          echo "Dumping full GitHub event payload:"
-          cat $GITHUB_EVENT_PATH
+      
+      # - name: Checkout Repository
+      #   uses: actions/checkout@v3
 
-      - name: Extract Release Object
-        env:
-          GITHUB_EVENT_PATH: ${{ github.event_path }}
-        run: |
-          echo "Unwinding github.event.release:"
-          # Extract and pretty-print the release object
-          jq '.release' < $GITHUB_EVENT_PATH
-
-      - name: Iterate Over Release Keys
-        env:
-          GITHUB_EVENT_PATH: ${{ github.event_path }}
-        run: |
-          echo "Iterating through github.event.release keys:"
-          # Extract and iterate through release object keys and values
-          jq -r '.release | to_entries[] | "\(.key): \(.value)"' < $GITHUB_EVENT_PATH
-
-
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Get Release Tag and ID
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Fetch release tag from GitHub context
-          RELEASE_TAG=${{ github.event.release.tag_name }}
-          echo "Release Tag: $RELEASE_TAG"
-
-          echo "${{github.event.release}}"
-
-          # Fetch release ID using GitHub API
-          RELEASE_ID=$(curl -s \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "${{ github.api_url }}/repos/${{ github.repository }}/releases" \
-            | jq -r ".[] | select(.tag_name == \"$RELEASE_TAG\") | .id")
-
-          echo "Release ID: $RELEASE_ID"
-
-          # Export variables for use in subsequent steps
-          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
-          echo "RELEASE_ID=$RELEASE_ID" >> $GITHUB_ENV
-
-      - name: just get it out of the event
-        run: |
-          echo ${{github.event.release.tag_name}}
-          echo ${{github.event.release.id}}
+      - id: get-tag
+        run: echo "tag=${{github.event.release.tag_name}}" >> "$GITHUB_OUTPUT"          
 
       - name: Use Release Details
         run: |
-          echo "Using Release Tag: $RELEASE_TAG"
-          echo "Using Release ID: $RELEASE_ID"
+          echo "Using Release Tag: ${{github.event.release.tag_name}}"
+          echo "Using Release ID: ${{github.event.release.id}}"
+  
+  fetch-branch-name:
+    runs-on: ubuntu-latest
+    outputs: 
+      enviros: ${{ steps.get-name.outputs.branch_name }}
+    steps:
+      - id: get-name
+        run: echo "tag=${ git branch --show-current }" >> "$GITHUB_OUTPUT" 
+      - run: git branch --show-current
