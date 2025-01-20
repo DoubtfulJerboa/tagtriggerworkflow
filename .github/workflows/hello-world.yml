@@ -62,5 +62,5 @@ jobs:
       enviros: ${{ steps.get-name.outputs.branch_name }}
     steps:
       - id: get-name
-        run: echo "tag=${ git branch --show-current }" >> "$GITHUB_OUTPUT" 
+        run: echo "tag=$( git branch --show-current )" >> "$GITHUB_OUTPUT" 
       - run: git branch --show-current
