@@ -64,5 +64,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
       - run: echo ${{ github.event.release.target_commitish }}
+      - run: echo helloworld
       - id: get-name
         run: echo "tag=${{ github.event.release.target_commitish }}" >> "$GITHUB_OUTPUT" 
