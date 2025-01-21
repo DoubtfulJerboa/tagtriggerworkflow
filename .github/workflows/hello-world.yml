@@ -3,6 +3,7 @@ name: helloworld
 on: 
     release:
       types: [published]
+      # when publishing a release targetting a specific branch or commit, it will run the workflow that exists in that specified target - so targetting develop will run the workflow that is stored in develop, so watch out if youve changed the workflow
 
 
 jobs:
