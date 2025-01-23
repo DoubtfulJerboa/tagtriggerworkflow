@@ -17,6 +17,7 @@ jobs:
       prerelease: ${{steps.outputs.check-tag.prerelease}}
       buildmetadata: ${{steps.outputs.check-tag.buildmetadata}}
     steps:
+      - uses: actions/checkout@v4
       - name: latest-git-tag
         run: echo tag=$(git describe --tags --abrev=0) >> $GITHUB_OUTPUT
       - id: check-tag
