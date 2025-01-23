@@ -20,13 +20,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-tags: true
+          fetch-depth: 0
       - name: latest-git-tag
         run: |
             tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
             echo tag=$tag >> $GITHUB_OUTPUT
       - run: git describe --tags --abbrev=0
         continue-on-error: true
-        
+
       - run: git describe --tags
         continue-on-error: true 
       
