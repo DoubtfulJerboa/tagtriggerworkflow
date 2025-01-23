@@ -19,19 +19,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: latest-git-tag
-        run: echo tag=$(git describe --tags --abbrev=0) >> $GITHUB_OUTPUT
-      - run: echo "${{ steps.latest-git-tag.outputs.tag }}"
-      - id: check-tag
-        if: steps.latest-git-tag.outputs.tag != ''
         run: |
-          if [[ "${{ steps.latest-git-tag.outputs.tag }}" =~ ^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$ ]]; then
+            tag=$(git describe --tags --abbrev=0)
+            echo tag=$(git describe --tags --abbrev=0) >> $GITHUB_OUTPUT
+      - run: echo "${{ env.tag }}"
+      - id: check-tag
+        if: env.tag != ''
+        run: |
+          if [[ "${{ env.tag }}" =~ ^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$ ]]; then
               echo "major=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
               echo "minor=${BASH_REMATCH[2]}" >> $GITHUB_OUTPUT
               echo "patch=${BASH_REMATCH[3]}" >> $GITHUB_OUTPUT
               echo "prerelease=${BASH_REMATCH[4]}" >> $GITHUB_OUTPUT
               echo "buildmetadata=${BASH_REMATCH[5]}" >> $GITHUB_OUTPUT
           else
-              echo "Tag ${{ steps.latest-git-tag.outputs.tag }} is NOT VALID"
+              echo "Tag ${{ env.tag }} is NOT VALID"
               exit 1
           fi
   generate-version:
