@@ -40,16 +40,16 @@ jobs:
       version: ${{ env.nextversion }}
     steps:
       - id: default-main
-        if: ${{needs.find-previous-version.outputs.prev-ver}} == "" && ${{github.event.ref}} == "refs/heads/main"
+        if: needs.find-previous-version.outputs.prev-ver == '' && github.event.ref == 'refs/heads/main'
         run: nextversion="1.0.0"
         
       - id: default-develop
         # there isnt much point to this defaulting to 0.1.0 on develop if develop tags never get 
-        if: ${{needs.find-previous-version.outputs.prev-ver}} == "" && ${{github.event.ref}} != "refs/heads/main"
+        if: needs.find-previous-version.outputs.prev-ver == '' && github.event.ref != 'refs/heads/main'
         run: nextversion="0.1.0"
 
       - id: calculate-new
-        if: ${{needs.find-previous-version.outputs.prev-ver}} != ""
+        if: needs.find-previous-version.outputs.prev-ver != ''
         # placeholder
         run: nextversion="1.2.3"
   
