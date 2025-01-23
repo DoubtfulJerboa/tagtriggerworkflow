@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: latest-git-tag
-        run: echo tag=$(git describe --tags --abrev=0) >> $GITHUB_OUTPUT
+        run: echo tag=$(git describe --tags --abbrev=0) >> $GITHUB_OUTPUT
       - id: check-tag
         run: |
           if [[ ${{ steps.outputs.latest-git-tag.tag }} =~ ^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$ ]]; then
