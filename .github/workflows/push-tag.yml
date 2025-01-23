@@ -20,9 +20,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: latest-git-tag
         run: |
-            tag=$(git describe --tags --abbrev=0)
-            echo tag=$(git describe --tags --abbrev=0) >> $GITHUB_OUTPUT
+            git fetch --tags
+            tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            echo tag=$tag >> $GITHUB_OUTPUT
       - run: echo "${{ env.tag }}"
+      - run: echo $tag
       - id: check-tag
         if: env.tag != ''
         run: |
