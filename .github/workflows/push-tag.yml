@@ -18,12 +18,24 @@ jobs:
       buildmetadata: ${{steps.outputs.check-tag.buildmetadata}}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
       - name: latest-git-tag
         run: |
-            git fetch --tags
             tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
             echo tag=$tag >> $GITHUB_OUTPUT
       - run: git describe --tags --abbrev=0
+      - run: git describe --tags
+        continue-on-error: true 
+      
+      - run: git show-ref --tags -d
+        continue-on-error: true 
+      - run: git tag -l
+        continue-on-error: true 
+        
+      - run: git tag --sort=-creatordate
+        continue-on-error: true 
+        
       - run: echo "${{ env.tag }}"
       - run: echo $tag
       - id: check-tag
