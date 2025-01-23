@@ -23,6 +23,7 @@ jobs:
             git fetch --tags
             tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
             echo tag=$tag >> $GITHUB_OUTPUT
+      - run: git describe --tags --abbrev=0
       - run: echo "${{ env.tag }}"
       - run: echo $tag
       - id: check-tag
