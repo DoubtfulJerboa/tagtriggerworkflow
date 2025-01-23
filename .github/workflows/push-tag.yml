@@ -25,6 +25,8 @@ jobs:
             tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
             echo tag=$tag >> $GITHUB_OUTPUT
       - run: git describe --tags --abbrev=0
+        continue-on-error: true
+        
       - run: git describe --tags
         continue-on-error: true 
       
@@ -32,7 +34,7 @@ jobs:
         continue-on-error: true 
       - run: git tag -l
         continue-on-error: true 
-        
+
       - run: git tag --sort=-creatordate
         continue-on-error: true 
         
