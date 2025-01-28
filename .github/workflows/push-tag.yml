@@ -53,13 +53,6 @@ jobs:
               continue
             fi
             
-            if [[ "${commit,,}" =~ major || "${commit,,}" =~ breaking ]]; then
-              major=true
-            fi
-
-            if [[ "${commit,,}" =~ feature ]]; then
-              minor=true
-            fi
 
           done
 
