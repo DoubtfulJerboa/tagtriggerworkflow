@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 0
       - name: latest-git-tag
         run: |
-            tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            tag=$(git describe --tags --abbrev=0)
             echo tag=$tag >> $GITHUB_OUTPUT
       - run: git describe --tags --abbrev=0
         continue-on-error: true
