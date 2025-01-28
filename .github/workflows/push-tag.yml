@@ -7,10 +7,10 @@ on:
       - develop
 
 jobs:
-  find-previous-version:
+  generate-version:
     runs-on: ubuntu-latest
     outputs:
-      prev-ver: ${{steps.outputs.latest-git-tag.tag}}
+      version: ${{env.nextversion}}
       # major: ${{steps.outputs.check-tag.group1}}
       # minor: ${{steps.outputs.check-tag.group2}}
       # patch: ${{steps.outputs.check-tag.group3}}
@@ -25,62 +25,18 @@ jobs:
         uses: actions-ecosystem/action-get-latest-tag@v1.6.0
         with: 
           semver_only: true
-      # - name: latest-git-tag
-      #   run: |
-      #       tag=$(git describe --tags --abbrev=0)
-      #       echo $tag
-      #       echo "tag=$tag" >> $GITHUB_OUTPUT
-      #       echo "tag=$tag" >> $GITHUB_ENV
-      # - run: git describe --tags --abbrev=0
-      #   continue-on-error: true
-
-      # - run: git describe --tags
-      #   continue-on-error: true 
-      
-      # - run: git show-ref --tags -d
-      #   continue-on-error: true 
-      # - run: git tag -l
-      #   continue-on-error: true 
-
-      # - run: git tag --sort=-creatordate
-      #   continue-on-error: true 
-        
-      # - run: echo "${{ env.tag }}"
-      # - run: echo $tag
-      # - id: check-tag
-      #   if: env.tag != ''
-      #   uses: actions-ecosystem/action-regex-match@v2.0.2
-      #   with:
-      #     text: env.tag
-      #     regex: ^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$
-      #   # run: |
-      #   #   if [[ "${{ env.tag }}" =~ ^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$ ]]; then
-      #   #       echo "major=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
-      #   #       echo "minor=${BASH_REMATCH[2]}" >> $GITHUB_OUTPUT
-      #   #       echo "patch=${BASH_REMATCH[3]}" >> $GITHUB_OUTPUT
-      #   #       echo "prerelease=${BASH_REMATCH[4]}" >> $GITHUB_OUTPUT
-      #   #       echo "buildmetadata=${BASH_REMATCH[5]}" >> $GITHUB_OUTPUT
-      #   #   else
-      #   #       echo "Tag ${{ env.tag }} is NOT VALID"
-      #   #       exit 1
-      #   #   fi
-  generate-version:
-    runs-on: ubuntu-latest
-    needs: find-previous-version
-    outputs:
-      version: ${{ env.nextversion }}
-    steps:
+          
       - id: default-main
-        if: needs.find-previous-version.outputs.prev-ver == '' && github.event.ref == 'refs/heads/main'
+        if: steps.get-tag.outputs.tag == '' && github.event.ref == 'refs/heads/main'
         run: echo "nextversion=1.0.0" >> $GITHUB_ENV
         
       - id: default-develop
         # there isnt much point to this defaulting to 0.1.0 on develop if develop tags never get 
-        if: needs.find-previous-version.outputs.prev-ver == '' && github.event.ref != 'refs/heads/main'
+        if: steps.get-tag.outputs.tag == '' && github.event.ref != 'refs/heads/main'
         run: echo "nextversion=0.1.0" >> $GITHUB_ENV
 
       - id: calculate-level
-        if: needs.find-previous-version.outputs.prev-ver != ''
+        if: steps.get-tag.outputs.tag != ''
         # placeholder
         run: |
           
@@ -111,22 +67,19 @@ jobs:
           fi          
 
       - uses: actions-ecosystem/action-bump-semver@v1
-        if: needs.find-previous-version.outputs.prev-ver != ''
+        if: steps.get-tag.outputs.tag != ''
         id: bump-semver
         with:
-          current_version: ${{ needs.find-previous-version.outputs.prev-ver }}
+          current_version: ${{ steps.get-tag.outputs.tag }}
           level: ${{steps.calculate-level.outputs.level}}
       
       - id: semver-to-env
         run: echo "nextversion=${{steps.bump-semver.outputs.new_version}}" >> $GITHUB_ENV
 
-  push-tag:
-    runs-on: ubuntu-latest
-    needs: generate-version
-    steps:
-      - uses: actions-ecosystem/action-push-tag@v1
+      - if: github.event.ref == 'refs/heads/main'
+        uses: actions-ecosystem/action-push-tag@v1
         with:
-          tag: ${{ needs.generate-version.outputs.version }}
+          tag: ${{ env.nextversion }}
         
   print-version:
     runs-on: ubuntu-latest
