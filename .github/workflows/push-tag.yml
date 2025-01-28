@@ -48,6 +48,11 @@ jobs:
           minor=false
 
           for commit in ${{ github.event.commits }}; do
+            echo $commit
+            if[[ $commit == "" ]]; then
+              continue
+            fi
+            
             if [[ "${commit,,}" =~ major || "${commit,,}" =~ breaking ]]; then
               major=true
             fi
