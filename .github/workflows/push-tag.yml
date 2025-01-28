@@ -42,7 +42,7 @@ jobs:
           major=false
           minor=false
 
-          for commit in ${{ github.event.commits }}; do
+          for commit in ${{ toJson(github.event.commits) }}; do
             echo $commit
             if[[ $commit == "" ]]; then
               continue
