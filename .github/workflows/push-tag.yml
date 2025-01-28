@@ -24,7 +24,7 @@ jobs:
       - name: latest-git-tag
         run: |
             tag=$(git describe --tags --abbrev=0)
-            echo tag=$tag >> $GITHUB_OUTPUT
+            echo "tag=$tag" >> $GITHUB_OUTPUT
       - run: git describe --tags --abbrev=0
         continue-on-error: true
 
