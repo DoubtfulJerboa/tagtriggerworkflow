@@ -39,11 +39,6 @@ jobs:
         if: steps.get-tag.outputs.tag != ''
         # placeholder
         run: |
-          
-          if [[ ${,,} =~ ".*major.*" ]]; then
-            echo "It's there!"
-          fi
-
           major=false
           minor=false
 
@@ -52,7 +47,13 @@ jobs:
             if[[ $commit == "" ]]; then
               continue
             fi
-            
+            if [[ "${commit,,}" =~ major || "${commit,,}" =~ breaking ]]; then
+              major=true
+            fi
+
+            if [[ "${commit,,}" =~ feature ]]; then
+              minor=true
+            fi
 
           done
 
