@@ -42,9 +42,9 @@ jobs:
           major=false
           minor=false
 
-          for commit in ${{ toJson(github.event.commits) }}; do
+          for commit in $(jq -r '.[].message' <<< '${{ toJson(github.event.commits) }}'); do
             echo $commit
-            if[[ $commit == "" ]]; then
+            if [[ $commit == "" ]]; then
               continue
             fi
             if [[ "${commit,,}" =~ major || "${commit,,}" =~ breaking ]]; then
