@@ -12,8 +12,18 @@ jobs:
   add-checkbox-label:
     runs-on: ubuntu-latest
     steps:
+      - name: Check if Comment is from GitHub Actions
+        id: check-author
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const author = context.payload.comment.user.login;
+            console.log(`Comment author: ${author}`);
+            core.setOutput("bot-comment", author === "github-actions[bot]" ? "true" : "false");
+
       - name: Get release type from comment
         id: get-type
+        if: steps.check-author.outputs.bot-comment == 'true'
         uses: actions/github-script@v7
         with:
           script: |
@@ -38,7 +48,7 @@ jobs:
 
       - name: Get existing labels in PR
         id: get-existing-labels
-        if: steps.get-type.outputs.release-label != ''
+        if: steps.check-author.outputs.bot-comment == 'true'
         uses: actions/github-script@v7
         with:
           script: |
