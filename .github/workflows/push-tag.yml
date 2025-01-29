@@ -24,86 +24,57 @@ jobs:
         with:
           fetch-tags: true
           fetch-depth: 0
+
       - id: get-tag
+        name: Get latest semantic version tag
         uses: actions-ecosystem/action-get-latest-tag@v1
         with: 
           semver_only: true
           
-      - id: default-main
+      - id: default
+        name: No tag default version num
         if: steps.get-tag.outputs.tag == '' && github.event.ref == 'refs/heads/main'
         run: echo "nextversion=1.0.0" >> $GITHUB_ENV
         
-      - id: default-develop
-        # there isnt much point to this defaulting to 0.1.0 on develop if develop tags never get 
-        if: steps.get-tag.outputs.tag == '' && github.event.ref != 'refs/heads/main'
-        run: echo "nextversion=0.1.0" >> $GITHUB_ENV
-
       - id: get-PR
+        name: Get merged pull request
         if: steps.get-tag.outputs.tag != ''
         uses: actions-ecosystem/action-get-merged-pull-request@v1
         with: 
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: |
-          echo ${{steps.get-PR.outputs.title}}
-          echo ${{steps.get-PR.outputs.body}}
-          echo ${{steps.get-PR.outputs.number}}
-          echo ${{steps.get-PR.outputs.labels}}
-
       - id: get-PR-level
+        name: Get release tag from PR
+        if: steps.get-PR.outputs.number != null
         uses: actions-ecosystem/action-release-label@v1
         with: 
           label_prefix: release/
-          labels: ${{steps.get-PR.outputs.labels}}
-
-      # - id: calculate-level
-      #   if: steps.get-tag.outputs.tag != ''
-      #   # TODO check if was a merged PR - if yes, get pr label - if no its a patch
-      #   run: |
-      #     major=false
-      #     minor=false
-
-      #     for commit in $(jq -r '.[].message' <<< '${{ toJson(github.event.commits) }}'); do
-      #       echo $commit
-      #       if [[ $commit == "" ]]; then
-      #         continue
-      #       fi
-      #       if [[ "${commit,,}" =~ major || "${commit,,}" =~ breaking ]]; then
-      #         major=true
-      #       fi
-
-      #       if [[ "${commit,,}" =~ feature ]]; then
-      #         minor=true
-      #       fi
-
-      #     done
-
-      #     if $major; then
-      #       echo "level=major" >> $GITHUB_OUTPUT
-      #     elif $minor; then
-      #       echo "level=minor" >> $GITHUB_OUTPUT
-      #     else
-      #       echo "level=patch" >> $GITHUB_OUTPUT
-      #     fi          
+          labels: ${{steps.get-PR.outputs.labels}}    
 
       - if: ${{ steps.release-label.outputs.level != null }}
+        name: Push level to env
         run: echo "releaselevel=${{steps.release-label.outputs.level}}" >> $GITHUB_ENV
 
       
       - if: ${{ steps.release-label.outputs.level == null }}
+        name: Push default level to env
         run: echo "releaselevel=patch" >> $GITHUB_ENV
 
       - uses: actions-ecosystem/action-bump-semver@v1
         if: steps.get-tag.outputs.tag != ''
         id: bump-semver
+        name: Bump semantic version
         with:
           current_version: ${{ steps.get-tag.outputs.tag }}
           level: ${{env.releaselevel}}
       
       - id: semver-to-env
+        if: steps.get-tag.outputs.tag != ''
+        name: Push bumped version to env
         run: echo "nextversion=${{steps.bump-semver.outputs.new_version}}" >> $GITHUB_ENV
 
-      - if: github.event.ref == 'refs/heads/main'
+      - name: Push version to repo tags
+        if: github.event.ref == 'refs/heads/main'
         uses: actions-ecosystem/action-push-tag@v1
         with:
           tag: ${{ env.nextversion }}
