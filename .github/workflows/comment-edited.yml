@@ -38,6 +38,7 @@ jobs:
 
       - name: Get existing labels in PR
         id: get-existing-labels
+        if: steps.get-type.outputs.release-label != ''
         uses: actions/github-script@v7
         with:
           script: |
