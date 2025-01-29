@@ -24,21 +24,10 @@ jobs:
         with:
           fetch-tags: true
           fetch-depth: 0
-
-      - id: get-tag
-        name: Get latest semantic version tag
-        uses: actions-ecosystem/action-get-latest-tag@v1
-        with: 
-          semver_only: true
-          
-      - id: default
-        name: No tag default version num
-        if: steps.get-tag.outputs.tag == '' && github.event.ref == 'refs/heads/main'
-        run: echo "nextversion=1.0.0" >> $GITHUB_ENV
         
+      ### getting level ###
       - id: get-PR
         name: Get merged pull request
-        if: steps.get-tag.outputs.tag != ''
         uses: actions-ecosystem/action-get-merged-pull-request@v1
         with: 
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -60,6 +49,13 @@ jobs:
         name: Push default level to env
         run: echo "releaselevel=patch" >> $GITHUB_ENV
 
+      ### getting tag ###
+      - id: get-tag
+        name: Get latest semantic version tag
+        uses: actions-ecosystem/action-get-latest-tag@v1
+        with: 
+          semver_only: true
+
       - uses: actions-ecosystem/action-bump-semver@v1
         if: steps.get-tag.outputs.tag != ''
         id: bump-semver
@@ -72,6 +68,11 @@ jobs:
         if: steps.get-tag.outputs.tag != ''
         name: Push bumped version to env
         run: echo "nextversion=${{steps.bump-semver.outputs.new_version}}" >> $GITHUB_ENV
+          
+      - id: default
+        name: No tag default version num to env
+        if: steps.get-tag.outputs.tag == '' && github.event.ref == 'refs/heads/main'
+        run: echo "nextversion=1.0.0" >> $GITHUB_ENV
 
       - name: Push version to repo tags
         if: github.event.ref == 'refs/heads/main'
