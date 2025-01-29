@@ -2,7 +2,7 @@ name: PR-comment
 
 on: 
   pull_request_target:
-    types: [opened]
+    types: [opened, reopened] # repoened for temp testing
     branches:
       # only run on main? idk
       - main
