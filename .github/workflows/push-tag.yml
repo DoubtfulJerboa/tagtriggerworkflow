@@ -52,7 +52,7 @@ jobs:
         run: echo "releaselevel=${{steps.get-PR-level.outputs.level}}" >> $GITHUB_ENV
 
       
-      - if: ${{ steps.release-label.outputs.level == null }}
+      - if: ${{ steps.get-PR-level.outputs.level == null }}
         name: Push default level to env
         run: echo "releaselevel=patch" >> $GITHUB_ENV
 
