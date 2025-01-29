@@ -21,9 +21,14 @@ jobs:
       # buildmetadata: ${{steps.outputs.check-tag.group5}}
     steps:
       - uses: actions/checkout@v4
+        id: checkout
         with:
           fetch-tags: true
           fetch-depth: 0
+
+      - run: |
+          echo ${{ steps.checkout.outputs.commit }}
+          echo ${{ steps.checkout.outputs.ref }}
 
       - id: get-tag
         name: Get latest semantic version tag
