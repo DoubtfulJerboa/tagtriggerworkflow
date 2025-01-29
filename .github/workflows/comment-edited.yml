@@ -51,7 +51,7 @@ jobs:
             const releaseLabels = ["release/major", "release/minor", "release/patch"];
             const labelsToRemove = existingLabels
               .map(label => label.name)
-              .filter(name => releaseLabels.includes(name) && name !== ${{steps.get-type.outputs.release-label}});
+              .filter(name => releaseLabels.includes(name) && name !== "${{steps.get-type.outputs.release-label}}");
 
             for (const label of labelsToRemove) {
               await github.rest.issues.removeLabel({
@@ -73,14 +73,14 @@ jobs:
               await github.rest.issues.getLabel({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                name: ${{steps.get-type.outputs.release-label}},
+                name: "${{steps.get-type.outputs.release-label}}",
               });
             } catch (error) { 
               console.log(`Label '${{steps.get-type.outputs.release-label}}' does not exist, creating.`);
               await github.rest.issues.createLabel({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                name: ${{steps.get-type.outputs.release-label}},
+                name: "${{steps.get-type.outputs.release-label}}",
                 color: "ffffff", 
                 description: `Release type: ${{steps.get-type.outputs.release-label}}`,
               });
@@ -96,7 +96,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.issue.number,
-              labels: [${{steps.get-type.outputs.release-label}}],
+              labels: ["${{steps.get-type.outputs.release-label}}"],
             });
 
             console.log(`Added label: ${{steps.get-type.outputs.release-label}}`);
