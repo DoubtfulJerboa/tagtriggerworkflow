@@ -7,9 +7,9 @@ on:
     
 permissions:
     pull-requests: write   
-    
+
 jobs:
-  check-and-label:
+  add-checkbox-label:
     runs-on: ubuntu-latest
     steps:
       - name: Check if comment contains release type
@@ -24,16 +24,60 @@ jobs:
 
             let labelToAdd = null;
             if (context.payload.comment.body.includes("- [x] major")) {
-              labelToAdd = "major";
+              labelToAdd = "release/major";
             } else if (context.payload.comment.body.includes("- [x] minor")) {
-              labelToAdd = "minor";
+              labelToAdd = "release/minor";
             } else if (context.payload.comment.body.includes("- [x] patch")) {
-              labelToAdd = "patch";
+              labelToAdd = "release/patch";
             }
 
             if (!labelToAdd) {
               console.log("No checkbox is checked, skipping.");
               return;
+            }
+
+
+            // get labels already on PR
+            const { data: existingLabels } = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+            });
+
+            // if any need to get removed
+            const releaseLabels = ["release/major", "release/minor", "release/patch"];
+            const labelsToRemove = existingLabels
+              .map(label => label.name)
+              .filter(name => releaseLabels.includes(name) && name !== labelToAdd);
+
+            // remove old labels
+            for (const label of labelsToRemove) {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                name: label,
+              });
+              console.log(`Removed label: ${label}`);
+            }
+
+
+            // check label exists in repo
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: labelToAdd,
+              });
+            } catch (error) { // we can set the labels to exist org wide but they only apply when a new one is created
+              console.log(`Label '${labelToAdd}' does not exist, creating.`);
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: labelToAdd,
+                color: "ffffff", 
+                description: `Release type: ${labelToAdd}`,
+              });
             }
 
             await github.rest.issues.addLabels({
