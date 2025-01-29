@@ -13,12 +13,7 @@ jobs:
   generate-version:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{env.nextversion}}
-      # major: ${{steps.outputs.check-tag.group1}}
-      # minor: ${{steps.outputs.check-tag.group2}}
-      # patch: ${{steps.outputs.check-tag.group3}}
-      # prerelease: ${{steps.outputs.check-tag.group4}}
-      # buildmetadata: ${{steps.outputs.check-tag.group5}}
+      version: ${{env.fullversion}}
     steps:
       - uses: actions/checkout@v4
         id: checkout
@@ -84,6 +79,25 @@ jobs:
         uses: actions-ecosystem/action-push-tag@v1
         with:
           tag: ${{ env.nextversion }}
+
+      - name: Truncate hash
+        id: trunc-hash
+        run: |
+          hash="${{github.event.after}}"
+          echo "hash=${hash:0:7}" >> $GITHUB_OUTPUT
+          
+      - name: Get branch name
+        shell: bash
+        run: echo "branch=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+        id: get-branch
+
+      - name: Add -rc+hash
+        if: steps.get-branch.outputs.branch == 'main'
+        run: echo "fullversion=${{ env.nextversion }}-rc+${{steps.trunc-hash.outputs.hash}}" >> $GITHUB_ENV
+       
+      - name: Add -branchname+hash
+        if: steps.get-branch.outputs.branch != 'main'
+        run: echo "fullversion=${{ env.nextversion }}-${{steps.get-branch.outputs.branch}}+${{steps.trunc-hash.outputs.hash}}" >> $GITHUB_ENV
         
   print-version:
     runs-on: ubuntu-latest
