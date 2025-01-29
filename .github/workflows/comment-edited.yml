@@ -4,7 +4,10 @@ on:
   issue_comment:
     # there is no PR comment trigger, PRs are considered issues in the backend, just have to filter
     types: [edited]
-
+    
+permissions:
+    pull-requests: write   
+    
 jobs:
   check-and-label:
     runs-on: ubuntu-latest
