@@ -47,9 +47,9 @@ jobs:
           label_prefix: release/
           labels: ${{steps.get-PR.outputs.labels}}    
 
-      - if: ${{ steps.release-label.outputs.level != null }}
+      - if: ${{ steps.get-PR-level.outputs.level != null }}
         name: Push level to env
-        run: echo "releaselevel=${{steps.release-label.outputs.level}}" >> $GITHUB_ENV
+        run: echo "releaselevel=${{steps.get-PR-level.outputs.level}}" >> $GITHUB_ENV
 
       
       - if: ${{ steps.release-label.outputs.level == null }}
