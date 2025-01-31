@@ -1,10 +1,11 @@
-name: abc
+name: Generate version number from push
 
 on: 
   push:
     branches:
       - main
-      - feature/cool-feature
+      - UAT
+      - develop
 
 permissions:
   contents: write        
@@ -21,42 +22,45 @@ jobs:
           fetch-tags: true
           fetch-depth: 0
 
-      - run: |
-          echo ${{ steps.checkout.outputs.commit }}
-          echo ${{ steps.checkout.outputs.ref }}
-
+      ### DECISION 1 ### is previous tag found?
       - id: get-tag
         name: Get latest semantic version tag
         uses: actions-ecosystem/action-get-latest-tag@v1
         with: 
           semver_only: true
           
+      ### DECISION 2 ### is commit a merged PR?
       - id: get-PR
         name: Get merged pull request
-        # no point getting level & whatnot if we are going to default to version 1.0.0 (because theres no previous versions)
+        ## DECISION 1 RESULT ## yes
         if: steps.get-tag.outputs.tag != '' 
         uses: actions-ecosystem/action-get-merged-pull-request@v1
         with: 
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
+      ### DECISION 3 ### was PR labelled?
       - id: get-PR-level
         name: Get release tag from PR
+        ## DECISION 2 RESULT ## yes
         if: steps.get-PR.outputs.number != null
         uses: actions-ecosystem/action-release-label@v1
         with: 
           label_prefix: release/
           labels: ${{steps.get-PR.outputs.labels}}    
 
+        ## DECISION 3 RESULT ## yes
       - if: ${{ steps.get-PR-level.outputs.level != null }}
         name: Push level to env
         run: echo "releaselevel=${{steps.get-PR-level.outputs.level}}" >> $GITHUB_ENV
 
       
+        ## DECISION 3 RESULT ## no
       - if: ${{ steps.get-PR-level.outputs.level == null }}
         name: Push default level to env
         run: echo "releaselevel=patch" >> $GITHUB_ENV
 
       - uses: actions-ecosystem/action-bump-semver@v1
+        ## DECISION 1 RESULT ## yes
         if: steps.get-tag.outputs.tag != ''
         id: bump-semver
         name: Bump semantic version
@@ -65,13 +69,15 @@ jobs:
           level: ${{env.releaselevel}}
       
       - id: semver-to-env
+        ## DECISION 1 RESULT ## yes
         if: steps.get-tag.outputs.tag != ''
         name: Push bumped version to env
         run: echo "nextversion=${{steps.bump-semver.outputs.new_version}}" >> $GITHUB_ENV
           
       - id: default
         name: No tag default version num to env
-        if: steps.get-tag.outputs.tag == '' && github.event.ref == 'refs/heads/main'
+        ## DECISION 1 RESULT ## no 
+        if: steps.get-tag.outputs.tag == ''
         run: echo "nextversion=1.0.0" >> $GITHUB_ENV
 
       - name: Push version to repo tags
@@ -91,9 +97,9 @@ jobs:
         run: echo "branch=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
         id: get-branch
 
-      - name: Add -rc+hash
+      - name: Add -preprod+hash
         if: steps.get-branch.outputs.branch == 'main'
-        run: echo "fullversion=${{ env.nextversion }}-rc+${{steps.trunc-hash.outputs.hash}}" >> $GITHUB_ENV
+        run: echo "fullversion=${{ env.nextversion }}-preprod+${{steps.trunc-hash.outputs.hash}}" >> $GITHUB_ENV
        
       - name: Add -branchname+hash
         if: steps.get-branch.outputs.branch != 'main'
@@ -105,4 +111,3 @@ jobs:
     steps:
       - run: echo ${{needs.generate-version.outputs.version}}
 
-  # TODO add the extra semver properties depending on branch before finally returning out of workflow
