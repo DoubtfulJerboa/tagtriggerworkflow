@@ -1,0 +1,79 @@
+name: Create PR to main on merge into UAT
+
+on: 
+  pull_request:
+    types: [closed]
+    branches:
+      - UAT
+
+permissions:
+  contents: write        
+
+jobs:
+  create-PR:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - id: get-PR-level
+        name: Get release tag from PR
+        uses: actions-ecosystem/action-release-label@v1
+        with: 
+          label_prefix: release/
+          labels: ${{ github.event.pull_request.labels }}    
+
+      - name: Check if UAT->main PR already exists
+        id: check-pr
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: prs } = await github.rest.pulls.list({
+              context.repo.owner,
+              context.repo.repo,
+              state: "open",
+              head: `${context.repo.owner}:UAT`,
+              base: "main"
+            });
+
+            if (prs.length > 0) {
+              console.log("Existing PR found:", prs[0].html_url);
+              core.setOutput("pr-exists", "true");
+              core.setOutput("pr-url", prs[0].html_url);
+            } else {
+              console.log("No open PR found.");
+              core.setOutput("pr-exists", "false");
+            }
+
+      - name: Make new PR
+        if: steps.check-pr.outputs.pr-exists == false
+        id: new-pr
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            console.log("Creating a new PR...");
+
+            const { data: newPr } = await github.rest.pulls.create({
+              context.repo.owner,
+              context.repo.repo,
+              title: `Merge UAT into main`,
+              head: "UAT",
+              base: "main",
+              body: "This PR was automatically created by GitHub Actions."
+            });
+
+      - name: Add label to PR
+        id: add-label
+        if: steps.get-PR-level.outputs.level != null && steps.check-pr.outputs.pr-exists == false
+        uses: actions/github-script@v7
+        with:
+          script: |            
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              labels: ["release/${{steps.get-PR-level.outputs.level}}"],
+            });
+
+            console.log(`Added label: release/${{steps.get-PR-level.outputs.level}}`);
+
