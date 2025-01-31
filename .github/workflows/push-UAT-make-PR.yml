@@ -56,7 +56,7 @@ jobs:
             }
 
       - name: Make new PR
-        if: steps.check-pr.outputs.pr-exists == false
+        if: steps.check-pr.outputs.pr-exists != false
         id: new-pr
         uses: actions/github-script@v7
         with:
