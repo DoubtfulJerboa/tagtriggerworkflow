@@ -3,9 +3,9 @@ name: PR-comment
 on: 
   pull_request_target:
     types: [opened]
-    branches:
-      # only run on main? idk
-      - main
+    # branches:
+    #   # only run on main? idk
+    #   - main
 
 permissions:
   pull-requests: write        
