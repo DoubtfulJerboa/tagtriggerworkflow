@@ -14,12 +14,23 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
+      - id: join-labels
+        name: Join PR labels into string
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const labels = context.payload.pull_request.labels.map(label => label.name);
+            const joinedLabels = labels.join("\n");
+
+            core.setOutput("labels", joinedLabels); 
+        
       - id: get-PR-level
         name: Get release tag from PR
         uses: actions-ecosystem/action-release-label@v1
         with: 
           label_prefix: release/
-          labels: ${{ github.event.pull_request.labels }}    
+          labels: ${{ steps.join-labels.outputs.labels }}    
 
       - name: Check if UAT->main PR already exists
         id: check-pr
