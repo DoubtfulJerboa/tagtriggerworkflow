@@ -39,8 +39,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { data: prs } = await github.rest.pulls.list({
-              context.repo.owner,
-              context.repo.repo,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
               state: "open",
               head: `${context.repo.owner}:UAT`,
               base: "main"
@@ -65,8 +65,8 @@ jobs:
             console.log("Creating a new PR...");
 
             const { data: newPr } = await github.rest.pulls.create({
-              context.repo.owner,
-              context.repo.repo,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
               title: `Merge UAT into main`,
               head: "UAT",
               base: "main",
